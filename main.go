@@ -20,6 +20,7 @@ import (
 	"flag"
 	"os"
 
+	"github.com/operator-framework/operator-controller/internal/resolution/catalogsource"
 	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -89,9 +90,10 @@ func main() {
 	}
 
 	if err = (&controllers.OperatorReconciler{
-		Client:   mgr.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Resolver: resolution.NewOperatorResolver(mgr.GetClient(), resolution.HardcodedEntitySource),
+		Client:                  mgr.GetClient(),
+		Scheme:                  mgr.GetScheme(),
+		Resolver:                resolution.NewOperatorResolver(mgr.GetClient(), resolution.HardcodedEntitySource),
+		CatalogSourceReconciler: catalogsource.NewCatalogSourceReconciler(mgr.GetClient(), mgr.GetScheme()),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Operator")
 		os.Exit(1)

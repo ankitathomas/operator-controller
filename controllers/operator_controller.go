@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/operator-framework/deppy/pkg/deppy/solver"
+	"github.com/operator-framework/operator-controller/internal/resolution/catalogsource"
 	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -40,11 +41,16 @@ import (
 	"github.com/operator-framework/operator-controller/internal/resolution/variable_sources/entity"
 )
 
+type ReconcilerFactory func(client.Client, *runtime.Scheme) (interface {
+	Reconcile(context.Context, ctrl.Request) (ctrl.Result, error)
+}, error)
+
 // OperatorReconciler reconciles a Operator object
 type OperatorReconciler struct {
 	client.Client
-	Scheme   *runtime.Scheme
-	Resolver *resolution.OperatorResolver
+	Scheme                  *runtime.Scheme
+	Resolver                *resolution.OperatorResolver
+	CatalogSourceReconciler *catalogsource.CatalogSourceReconciler
 }
 
 //+kubebuilder:rbac:groups=operators.operatorframework.io,resources=operators,verbs=get;list;watch
@@ -249,7 +255,12 @@ func (r *OperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err != nil {
 		return err
 	}
-	return nil
+
+	if r.CatalogSourceReconciler == nil {
+		return fmt.Errorf("CatalogSourceReconciler is not set")
+	}
+
+	return r.CatalogSourceReconciler.SetupWithManager(mgr)
 }
 
 func (r *OperatorReconciler) ensureBundleDeployment(ctx context.Context, desiredBundleDeployment *unstructured.Unstructured) error {
