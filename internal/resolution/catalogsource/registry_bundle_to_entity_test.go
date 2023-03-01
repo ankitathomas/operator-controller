@@ -2,7 +2,7 @@ package catalogsource_test
 
 import (
 	"github.com/operator-framework/deppy/pkg/deppy/input"
-	"github.com/operator-framework/deppy/pkg/deppy/input/catalogsource"
+	"github.com/operator-framework/operator-controller/internal/resolution/catalogsource"
 
 	catalogsourceapi "github.com/operator-framework/operator-registry/pkg/api"
 

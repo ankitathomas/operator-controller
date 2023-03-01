@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/operator-framework/operator-controller/internal/util"
 	"github.com/operator-framework/operator-registry/alpha/property"
 	catalogsourceapi "github.com/operator-framework/operator-registry/pkg/api"
 	"k8s.io/apimachinery/pkg/util/errors"
 
 	"github.com/operator-framework/deppy/pkg/deppy"
 	"github.com/operator-framework/deppy/pkg/deppy/input"
-	"github.com/operator-framework/deppy/pkg/lib/util"
 )
 
 type UpgradeEdge struct {

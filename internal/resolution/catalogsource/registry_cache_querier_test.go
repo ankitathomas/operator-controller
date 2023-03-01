@@ -8,6 +8,8 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/operator-framework/operator-controller/internal/resolution/catalogsource"
+	"github.com/operator-framework/operator-controller/internal/util"
 
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/operator-framework/operator-registry/alpha/property"
@@ -23,8 +25,6 @@ import (
 
 	"github.com/operator-framework/deppy/pkg/deppy"
 	"github.com/operator-framework/deppy/pkg/deppy/input"
-	"github.com/operator-framework/deppy/pkg/deppy/input/catalogsource"
-	"github.com/operator-framework/deppy/pkg/lib/util"
 )
 
 type catalogContents struct {

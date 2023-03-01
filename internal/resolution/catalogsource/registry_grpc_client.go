@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
+	"github.com/operator-framework/operator-controller/internal/util/grpc"
 	catalogsourceapi "github.com/operator-framework/operator-registry/pkg/api"
 
 	"github.com/operator-framework/deppy/pkg/deppy/input"
-	"github.com/operator-framework/deppy/pkg/lib/grpc"
 )
 
 type RegistryClient interface {
