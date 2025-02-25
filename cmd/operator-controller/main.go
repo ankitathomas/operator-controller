@@ -147,6 +147,8 @@ func init() {
 
 	klog.InitFlags(flag.CommandLine)
 
+	addFeatureGateHelpCmd(operatorControllerCmd)
+
 	//add klog flags to flagset
 	flags.AddGoFlagSet(flag.CommandLine)
 

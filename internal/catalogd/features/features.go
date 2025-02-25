@@ -1,20 +1,81 @@
 package features
 
 import (
+	"bytes"
+	"fmt"
+	"sort"
+	"strings"
+	"text/tabwriter"
+
+	"k8s.io/apimachinery/pkg/util/json"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/component-base/featuregate"
+	yaml "sigs.k8s.io/yaml/goyaml.v2"
 )
 
 const (
 	APIV1MetasHandler = featuregate.Feature("APIV1MetasHandler")
 )
 
-var catalogdFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec{
-	APIV1MetasHandler: {Default: false, PreRelease: featuregate.Alpha},
+type FeatureGateInfo struct {
+	featuregate.FeatureSpec
+	name        featuregate.Feature
+	description string
+}
+
+var catalogdFeatureGates = []FeatureGateInfo{
+	{
+		FeatureSpec: featuregate.FeatureSpec{Default: false, PreRelease: featuregate.Alpha},
+		name:        APIV1MetasHandler,
+		description: "Enable handler for querying for v1 Catalogs.",
+	},
 }
 
 var CatalogdFeatureGate featuregate.MutableFeatureGate = featuregate.NewFeatureGate()
 
 func init() {
-	utilruntime.Must(CatalogdFeatureGate.Add(catalogdFeatureGates))
+	sort.Slice(catalogdFeatureGates, func(i, j int) bool {
+		return catalogdFeatureGates[i].name < catalogdFeatureGates[j].name
+	})
+	featureSpecs := map[featuregate.Feature]featuregate.FeatureSpec{}
+	for _, featureInfo := range catalogdFeatureGates {
+		featureSpecs[featureInfo.name] = featureInfo.FeatureSpec
+	}
+	utilruntime.Must(CatalogdFeatureGate.Add(featureSpecs))
+}
+
+func PrintFeatureGateHelp(format string) (string, error) {
+	type featureHelp struct {
+		Name        featuregate.Feature
+		Stability   string
+		Enabled     bool
+		Description string
+	}
+	var catalogdFeatureHelp []featureHelp
+	for _, featureInfo := range catalogdFeatureGates {
+		catalogdFeatureHelp = append(catalogdFeatureHelp, featureHelp{
+			Name:        featureInfo.name,
+			Stability:   string(featureInfo.PreRelease),
+			Enabled:     featureInfo.Default, // TODO: special handling for deprecated features?
+			Description: featureInfo.description,
+		})
+	}
+
+	switch strings.ToLower(format) {
+	case "json":
+		out, err := json.Marshal(catalogdFeatureHelp)
+		return string(out), err
+	case "yaml":
+		out, err := yaml.Marshal(catalogdFeatureHelp)
+		return string(out), err
+	default:
+		out := &bytes.Buffer{}
+		tw := tabwriter.NewWriter(out, 8, 4, 4, ' ', 0)
+		fmt.Fprintf(tw, "Name\tStability level\tEnabled by Default\tDescription\n")
+		for _, featureInfo := range catalogdFeatureHelp {
+			fmt.Fprintf(tw, "%s\t%s\t%v\t%s\n", featureInfo.Name, featureInfo.Stability, featureInfo.Enabled, featureInfo.Description)
+		}
+		err := tw.Flush()
+		return out.String(), err
+	}
 }

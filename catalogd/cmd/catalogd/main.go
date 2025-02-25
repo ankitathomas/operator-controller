@@ -138,6 +138,7 @@ func init() {
 
 	// adds version subcommand
 	catalogdCmd.AddCommand(versionCommand)
+	addFeatureGateHelpCmd(catalogdCmd)
 
 	// Add other flags
 	klog.InitFlags(flag.CommandLine)
