@@ -122,6 +122,7 @@ type ClusterExtensionSpec struct {
 }
 
 const SourceTypeCatalog = "Catalog"
+const SourceTypeOCIImage = "OCIImage"
 
 // SourceConfig is a discriminated union which selects the installation source.
 //
@@ -137,7 +138,7 @@ type SourceConfig struct {
 	// When using the Catalog sourceType, the catalog field must also be set.
 	//
 	// +unionDiscriminator
-	// +kubebuilder:validation:Enum:="Catalog"
+	// +kubebuilder:validation:Enum=Catalog;OCIImage
 	// +required
 	SourceType string `json:"sourceType"`
 
@@ -146,6 +147,11 @@ type SourceConfig struct {
 	//
 	// +optional
 	Catalog *CatalogFilter `json:"catalog,omitempty"`
+
+	// ociimage configures the oci image ref to source the bundle for
+	// the clusterextension from. It is required when sourceType is "ociimage",
+	// and forbidden otherwise.
+	OCIImage *OCIImage `json:"ociimage,omitempty"`
 }
 
 // ClusterExtensionInstallConfig is a union which selects the clusterExtension installation config.
@@ -375,6 +381,23 @@ type CatalogFilter struct {
 	// +kubebuilder:default:=CatalogProvided
 	// +optional
 	UpgradeConstraintPolicy UpgradeConstraintPolicy `json:"upgradeConstraintPolicy,omitempty"`
+}
+
+type OCIImage struct {
+	// ref is the OCI Image reference for the bundle. A bundle installed this way is reconciled only
+	// when a clusterextension is first created or the ref has been updated.
+	//
+	// +required
+	// +kubebuilder:validation:MaxLength:=1000
+	// +kubebuilder:validation:XValidation:rule="self.matches('^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])((\\\\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]))+)?(:[0-9]+)?\\\\b')",message="must start with a valid domain. valid domains must be alphanumeric characters (lowercase and uppercase) separated by the \".\" character."
+	// +kubebuilder:validation:XValidation:rule="self.find('(\\\\/[a-z0-9]+((([._]|__|[-]*)[a-z0-9]+)+)?((\\\\/[a-z0-9]+((([._]|__|[-]*)[a-z0-9]+)+)?)+)?)') != \"\"",message="a valid name is required. valid names must contain lowercase alphanumeric characters separated only by the \".\", \"_\", \"__\", \"-\" characters."
+	// +kubebuilder:validation:XValidation:rule="self.find('(@.*:)') != \"\" || self.find(':.*$') != \"\"",message="must end with a digest or a tag"
+	// +kubebuilder:validation:XValidation:rule="self.find('(@.*:)') == \"\" ? (self.find(':.*$') != \"\" ? self.find(':.*$').substring(1).size() <= 127 : true) : true",message="tag is invalid. the tag must not be more than 127 characters"
+	// +kubebuilder:validation:XValidation:rule="self.find('(@.*:)') == \"\" ? (self.find(':.*$') != \"\" ? self.find(':.*$').matches(':[\\\\w][\\\\w.-]*$') : true) : true",message="tag is invalid. valid tags must begin with a word character (alphanumeric + \"_\") followed by word characters or \".\", and \"-\" characters"
+	// +kubebuilder:validation:XValidation:rule="self.find('(@.*:)') != \"\" ? self.find('(@.*:)').matches('(@[A-Za-z][A-Za-z0-9]*([-_+.][A-Za-z][A-Za-z0-9]*)*[:])') : true",message="digest algorithm is not valid. valid algorithms must start with an uppercase or lowercase alpha character followed by alphanumeric characters and may contain the \"-\", \"_\", \"+\", and \".\" characters."
+	// +kubebuilder:validation:XValidation:rule="self.find('(@.*:)') != \"\" ? self.find(':.*$').substring(1).size() >= 32 : true",message="digest is not valid. the encoded string must be at least 32 characters"
+	// +kubebuilder:validation:XValidation:rule="self.find('(@.*:)') != \"\" ? self.find(':.*$').matches(':[0-9A-Fa-f]*$') : true",message="digest is not valid. the encoded string must only contain hex characters (A-F, a-f, 0-9)"
+	Ref string `json:"ref"`
 }
 
 // ServiceAccountReference identifies the serviceAccount used fo install a ClusterExtension.

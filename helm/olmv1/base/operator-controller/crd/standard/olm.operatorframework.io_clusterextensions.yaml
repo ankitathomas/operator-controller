@@ -425,6 +425,59 @@ spec:
                     required:
                     - packageName
                     type: object
+                  ociimage:
+                    description: |-
+                      ociimage configures the oci image ref to source the bundle for
+                      the clusterextension from. It is required when sourceType is "ociimage",
+                      and forbidden otherwise.
+                    properties:
+                      ref:
+                        description: |-
+                          ref is the OCI Image reference for the bundle. A bundle installed this way is reconciled only
+                          when a clusterextension is first created or the ref has been updated.
+                        maxLength: 1000
+                        type: string
+                        x-kubernetes-validations:
+                        - message: must start with a valid domain. valid domains must
+                            be alphanumeric characters (lowercase and uppercase) separated
+                            by the "." character.
+                          rule: self.matches('^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])((\\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]))+)?(:[0-9]+)?\\b')
+                        - message: a valid name is required. valid names must contain
+                            lowercase alphanumeric characters separated only by the
+                            ".", "_", "__", "-" characters.
+                          rule: self.find('(\\/[a-z0-9]+((([._]|__|[-]*)[a-z0-9]+)+)?((\\/[a-z0-9]+((([._]|__|[-]*)[a-z0-9]+)+)?)+)?)')
+                            != ""
+                        - message: must end with a digest or a tag
+                          rule: self.find('(@.*:)') != "" || self.find(':.*$') !=
+                            ""
+                        - message: tag is invalid. the tag must not be more than 127
+                            characters
+                          rule: 'self.find(''(@.*:)'') == "" ? (self.find('':.*$'')
+                            != "" ? self.find('':.*$'').substring(1).size() <= 127
+                            : true) : true'
+                        - message: tag is invalid. valid tags must begin with a word
+                            character (alphanumeric + "_") followed by word characters
+                            or ".", and "-" characters
+                          rule: 'self.find(''(@.*:)'') == "" ? (self.find('':.*$'')
+                            != "" ? self.find('':.*$'').matches('':[\\w][\\w.-]*$'')
+                            : true) : true'
+                        - message: digest algorithm is not valid. valid algorithms
+                            must start with an uppercase or lowercase alpha character
+                            followed by alphanumeric characters and may contain the
+                            "-", "_", "+", and "." characters.
+                          rule: 'self.find(''(@.*:)'') != "" ? self.find(''(@.*:)'').matches(''(@[A-Za-z][A-Za-z0-9]*([-_+.][A-Za-z][A-Za-z0-9]*)*[:])'')
+                            : true'
+                        - message: digest is not valid. the encoded string must be
+                            at least 32 characters
+                          rule: 'self.find(''(@.*:)'') != "" ? self.find('':.*$'').substring(1).size()
+                            >= 32 : true'
+                        - message: digest is not valid. the encoded string must only
+                            contain hex characters (A-F, a-f, 0-9)
+                          rule: 'self.find(''(@.*:)'') != "" ? self.find('':.*$'').matches('':[0-9A-Fa-f]*$'')
+                            : true'
+                    required:
+                    - ref
+                    type: object
                   sourceType:
                     description: |-
                       sourceType is required and specifies the type of install source.
@@ -436,6 +489,7 @@ spec:
                       When using the Catalog sourceType, the catalog field must also be set.
                     enum:
                     - Catalog
+                    - OCIImage
                     type: string
                 required:
                 - sourceType

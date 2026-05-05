@@ -33,6 +33,10 @@ type SourceConfigApplyConfiguration struct {
 	// catalog configures how information is sourced from a catalog.
 	// It is required when sourceType is "Catalog", and forbidden otherwise.
 	Catalog *CatalogFilterApplyConfiguration `json:"catalog,omitempty"`
+	// ociimage configures the oci image ref to source the bundle for
+	// the clusterextension from. It is required when sourceType is "ociimage",
+	// and forbidden otherwise.
+	OCIImage *OCIImageApplyConfiguration `json:"ociimage,omitempty"`
 }
 
 // SourceConfigApplyConfiguration constructs a declarative configuration of the SourceConfig type for use with
@@ -54,5 +58,13 @@ func (b *SourceConfigApplyConfiguration) WithSourceType(value string) *SourceCon
 // If called multiple times, the Catalog field is set to the value of the last call.
 func (b *SourceConfigApplyConfiguration) WithCatalog(value *CatalogFilterApplyConfiguration) *SourceConfigApplyConfiguration {
 	b.Catalog = value
+	return b
+}
+
+// WithOCIImage sets the OCIImage field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OCIImage field is set to the value of the last call.
+func (b *SourceConfigApplyConfiguration) WithOCIImage(value *OCIImageApplyConfiguration) *SourceConfigApplyConfiguration {
+	b.OCIImage = value
 	return b
 }
